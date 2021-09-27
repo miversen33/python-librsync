@@ -38,6 +38,9 @@ RS_JOB_BLOCKSIZE = 65536
 RS_DEFAULT_STRONG_LEN = 8
 RS_DEFAULT_BLOCK_LEN = 2048
 
+RS_DELTA_MAGIC = 0x72730236
+RS_MD4_SIG_MAGIC = 0x72730136
+RS_BLAKE2_SIG_MAGIC = 0x72730137
 
 #############################
 #  DEFINES FROM librsync.h  #
@@ -158,16 +161,16 @@ def debug(level=syslog.LOG_DEBUG):
 
 
 @seekable
-def signature(f, s=None, block_size=RS_DEFAULT_BLOCK_LEN):
+def signature(f, s=None, block_size=RS_DEFAULT_BLOCK_LEN, magic_number=RS_MD4_SIG_MAGIC):
     """
     Generate a signature for the file `f`. The signature will be written to `s`.
     If `s` is omitted, a temporary file will be used. This function returns the
     signature file `s`. You can specify the size of the blocks using the
-    optional `block_size` parameter.
+    optional `block_size` parameter. Additionally, you can specify an rs_`magic_number`. By default this is set to RS_MD4_SIG_MAGIC.
     """
     if s is None:
         s = tempfile.SpooledTemporaryFile(max_size=MAX_SPOOL, mode='wb+')
-    job = _librsync.rs_sig_begin(block_size, RS_DEFAULT_STRONG_LEN)
+    job = _librsync.rs_sig_begin(block_size, RS_DEFAULT_STRONG_LEN, magic_number)
     try:
         _execute(job, f, s)
     finally:
